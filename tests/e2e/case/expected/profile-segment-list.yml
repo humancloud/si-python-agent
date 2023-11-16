@@ -1,0 +1,16 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+{{- contains . }}
+- segmentid: {{ notEmpty .segmentid }}
+  endpointnames:
+    - /artist-provider
+  duration: {{ gt .duration 0 }}
+  start: "{{ notEmpty .start }}"
+  iserror: false
+  traceids:
+  {{- contains .traceids }}
+    - {{ notEmpty . }}
+  {{- end }}
+{{- end }}

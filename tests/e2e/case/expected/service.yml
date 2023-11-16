@@ -1,0 +1,18 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+- id: {{ b64enc "e2e-service-provider" }}.1
+  name: e2e-service-provider
+  shortname: e2e-service-provider
+  normal: true
+  layers:
+    - GENERAL
+  group: ""
+- id: {{ b64enc "e2e-service-consumer|namespace" }}.1
+  name: "e2e-service-consumer|namespace"
+  shortname: "e2e-service-consumer|namespace"
+  normal: true
+  layers:
+    - GENERAL
+  group: ""

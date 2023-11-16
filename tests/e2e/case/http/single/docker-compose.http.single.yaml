@@ -1,0 +1,43 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+
+
+services:
+
+  oap:
+    extends:
+      file: ../../../base/docker-compose.base.yml
+      service: oap
+    ports:
+      - "12800"
+
+  provider:
+    extends:
+      file: ../../../base/docker-compose.base.yml
+      service: fastapi-provider
+    environment:
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:12800
+      SW_AGENT_PROTOCOL: http
+    depends_on:
+      oap:
+        condition: service_healthy
+    ports:
+      - "9090"
+
+  consumer:
+    extends:
+      file: ../../../base/docker-compose.base.yml
+      service: flask-consumer
+    environment:
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:12800
+      SW_AGENT_PROTOCOL: http
+    depends_on:
+      provider:
+        condition: service_healthy
+    ports:
+      - "9090"
+
+networks:
+  e2e:

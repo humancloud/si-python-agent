@@ -1,0 +1,27 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+spans:
+{{- contains .spans }}
+- spanid: 0
+  parentspanid: -1
+  servicecode: e2e-service-provider
+  serviceinstancename: ""
+  starttime: {{ gt .starttime 0 }}
+  endtime: {{ gt .endtime 0 }}
+  endpointname: /artist-provider
+  type: Entry
+  peer: {{ notEmpty .peer }}
+  component: {{ notEmpty .component }}
+  iserror: false
+  layer: Http
+  tags:
+    {{- contains .tags }}
+    - key: http.url
+      value: {{ notEmpty .value }}
+    - key: http.method
+      value: POST
+    {{- end }}
+  logs: []
+{{- end }}

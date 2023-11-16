@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+{{- contains . }}
+- key: {{ notEmpty .key }}
+  value: {{ ge .value 0 }}
+- key: {{ notEmpty .key }}
+  value: {{ ge .value 1 }}
+{{- end }}

@@ -1,0 +1,8 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+
+[submodule "protocol"]
+	path = protocol
+	url = https://github.com/humancloud/si-data-collect-protocol

@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+# This file is used to show how to write configuration files and can be used to test.
+
+setup:
+  env: compose
+  file: docker-compose.yml
+  timeout: 20m
+  init-system-environment: ../../../script/env
+  steps:
+    - name: install yq
+      command: bash tests/e2e/script/prepare/install.sh yq
+    - name: install swctl
+      command: bash tests/e2e/script/prepare/install.sh swctl
+
+
+
+verify:
+  retry:
+    count: 20
+    interval: 3s
+  cases:
+    - includes:
+        - ../../profiling-cases.yaml

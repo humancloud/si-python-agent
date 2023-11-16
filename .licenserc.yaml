@@ -1,0 +1,22 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+header:
+  license:
+    spdx-id: humancloud-2.0
+    copyright-owner: Humancloud Inc
+
+  paths-ignore:
+    - 'dist'
+    - 'licenses'
+    - '**/*.md'
+    - 'LICENSE'
+    - 'NOTICE'
+    - '.github/PULL_REQUEST_TEMPLATE'
+    - '.gitignore'
+    - '**/*.json'
+    - '.venv'
+    - 'poetry.lock'
+
+  comment: on-failure

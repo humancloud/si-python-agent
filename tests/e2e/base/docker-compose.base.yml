@@ -1,0 +1,150 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+services:
+  # The following services are inherited by three protocols for testing
+  oap:
+    image: ghcr.io/apache/stackinsights/oap:${SW_OAP_COMMIT}
+    # Python agent supports gRPC/ HTTP/ Kafka reporting
+    expose:
+      - 11800 # gRPC
+      - 12800 # HTTP
+    networks:
+      - e2e
+    healthcheck: # python base image has no nc command
+      test: [ "CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/11800" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+
+
+  fastapi-provider:
+    # Previously built in CI
+    image: apache/stackinsights-python-agent:latest-e2e
+    expose:
+      - 9090
+    networks:
+      - e2e
+    environment:
+      SW_AGENT_NAME: e2e-service-provider
+      SW_AGENT_INSTANCE_NAME: provider
+      SW_AGENT_LOGGING_LEVEL: DEBUG
+      SW_AGENT_LOG_REPORTER_ACTIVE: "True"
+      SW_AGENT_LOG_REPORTER_LEVEL: WARNING
+      SW_AGENT_LOG_REPORTER_SAFE_MODE: "True"
+      SW_AGENT_METER_REPORTER_ACTIVE: "True"
+      SW_AGENT_PVM_METER_REPORTER_ACTIVE: "True"
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_INSTANCE_PROPERTIES_JSON: '{"custom_property":"The answer to all is 42"}'
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/9090" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    command: [ "run", "python3", "fastapi_provider.py" ]
+
+  flask-provider:
+    image: apache/stackinsights-python-agent:latest-e2e
+    expose:
+      - 9090
+    networks:
+      - e2e
+    environment:
+      SW_AGENT_NAME: e2e-service-provider
+      SW_AGENT_INSTANCE_NAME: provider
+      SW_AGENT_LOGGING_LEVEL: DEBUG
+      SW_AGENT_LOG_REPORTER_ACTIVE: "True"
+      SW_AGENT_LOG_REPORTER_LEVEL: WARNING
+      SW_AGENT_LOG_REPORTER_SAFE_MODE: "True"
+      SW_AGENT_METER_REPORTER_ACTIVE: "True"
+      SW_AGENT_PVM_METER_REPORTER_ACTIVE: "True"
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_INSTANCE_PROPERTIES_JSON: '{"custom_property":"The answer to all is 42"}'
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/9090" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    command: [ "run", "python3", "flask_provider.py" ]
+
+
+  fastapi-consumer:
+    image: apache/stackinsights-python-agent:latest-e2e
+    expose:
+      - 9090
+    networks:
+      - e2e
+    environment:
+      SW_AGENT_NAME: "e2e-service-consumer"
+      SW_AGENT_INSTANCE_NAME: consumer
+      SW_AGENT_LOGGING_LEVEL: DEBUG
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_NAMESPACE: "namespace"
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/9090" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    command: [ "run", "python3", "fastapi_consumer.py" ]
+
+  flask-consumer:
+    image: apache/stackinsights-python-agent:latest-e2e
+    expose:
+      - 9090
+    networks:
+      - e2e
+    environment:
+      SW_AGENT_NAME: "e2e-service-consumer"
+      SW_AGENT_INSTANCE_NAME: consumer
+      SW_AGENT_LOGGING_LEVEL: DEBUG
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: oap:11800
+      SW_AGENT_NAMESPACE: "namespace"
+    healthcheck:
+      test: [ "CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/9090" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+    command: [ "run", "python3", "flask_consumer.py" ]
+
+  # Using bitnami/kafka:3.5.1-debian-11-r3 image
+  broker-a:
+    image: docker.io/bitnami/kafka@sha256:e28e91f169403cf56ec04622ff0a8d7b2f0713717cedf3313dd5ab9d3189d0da
+    hostname: broker-a
+    expose:
+      - 9092
+    networks:
+      - e2e
+    environment:
+      - BITNAMI_DEBUG=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@broker-a:9093,1@broker-b:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "broker-a:9092" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+
+  # Using bitnami/kafka:3.5.1-debian-11-r3 image
+  broker-b:
+    image: docker.io/bitnami/kafka@sha256:e28e91f169403cf56ec04622ff0a8d7b2f0713717cedf3313dd5ab9d3189d0da
+    hostname: broker-b
+    expose:
+      - 9092
+    networks:
+      - e2e
+    environment:
+      - BITNAMI_DEBUG=yes
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@broker-a:9093,1@broker-b:9093
+      - KAFKA_KRAFT_CLUSTER_ID=abcdefghijklmnopqrstuv
+    healthcheck:
+      test: [ "CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "broker-b:9092" ]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+networks:
+  e2e:

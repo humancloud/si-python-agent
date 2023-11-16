@@ -1,0 +1,29 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+# Builds -> stackinsights-agent:latest-e2e
+ARG BASE_PYTHON_IMAGE
+
+FROM python:${BASE_PYTHON_IMAGE}
+
+VOLUME /services
+
+COPY tests/e2e/base/consumer/* /services/
+COPY tests/e2e/base/provider/* /services/
+
+# Copy the project and build
+COPY . /stackinsights-python/
+RUN cd /stackinsights-python && apt-get update && apt-get install -y make && make install
+
+# Extra dependencies for e2e services
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc build-essential\
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install uwsgi fastapi uvicorn aiohttp flask gunicorn\
+    && apt-get purge -y --auto-remove gcc build-essential
+
+# Entrypoint with agent attached
+WORKDIR /services
+
+Entrypoint ["sw-python"]

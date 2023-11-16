@@ -1,0 +1,13 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+
+  cases:
+    # basic check: service metrics
+    - query: swctl --display yaml --base-url=http://${oap_host}:${oap_12800}/graphql metrics linear --name service_sla --service-name=e2e-service-provider |yq e 'to_entries' -
+      expected: expected/metrics-has-value.yml
+
+    # basic check: service endpoint metrics
+    - query: swctl --display yaml --base-url=http://${oap_host}:${oap_12800}/graphql metrics linear --name endpoint_cpm --endpoint-name=/artist-provider --service-name=e2e-service-provider |yq e 'to_entries' -
+      expected: expected/metrics-has-value.yml

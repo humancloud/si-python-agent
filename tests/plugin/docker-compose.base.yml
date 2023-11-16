@@ -1,0 +1,32 @@
+
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+##
+
+version: '2.1'
+# TODO Agent test tool testing for meter data and log data, currently missing
+
+services:
+  collector:
+    image: ghcr.io/apache/stackinsights-agent-test-tool/mock-collector:7f20775e0631356c4823d9372b09d653db0e6540
+    ports:
+      - 19876:19876
+      - 12800:12800
+    networks:
+      - beyond
+    healthcheck:
+      test: ["CMD", "bash", "-c", "cat < /dev/null > /dev/tcp/127.0.0.1/12800"]
+      interval: 5s
+      timeout: 60s
+      retries: 120
+
+  agent:
+    image: apache/stackinsights-python-agent:latest-plugin
+    environment:
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: collector:19876
+      SW_AGENT_LOGGING_LEVEL: DEBUG
+      SW_AGENT_PROFILE_ACTIVE: 'False'
+    networks:
+      - beyond
+    command: ['python3', '/entrypoint.py']

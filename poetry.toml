@@ -1,0 +1,10 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+
+[virtualenvs]
+create = true
+in-project = true
+# don't turn on unless python is always available (i.e. alias of python3)
+prefer-active-python = false

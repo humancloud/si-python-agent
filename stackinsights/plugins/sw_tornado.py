@@ -1,0 +1,115 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+
+from inspect import iscoroutinefunction, isawaitable
+
+from stackinsights import Layer, Component, config
+from stackinsights.trace.carrier import Carrier
+from stackinsights.trace.context import get_context, NoopContext
+from stackinsights.trace.span import NoopSpan
+from stackinsights.trace.tags import TagHttpMethod, TagHttpURL, TagHttpStatusCode
+
+# version_rule = {
+#     "name": "tornado",
+#     "rules": [">=5.0"]
+# }
+link_vector = ['https://www.tornadoweb.org']
+support_matrix = {
+    'tornado': {
+        '>=3.7': ['6.0', '6.1']
+    }
+}
+note = """"""
+
+
+def install():
+    from tornado.web import RequestHandler
+    old_execute = RequestHandler._execute
+    old_log_exception = RequestHandler.log_exception
+    RequestHandler._execute = _gen_sw_get_response_func(old_execute)
+
+    def _sw_handler_uncaught_exception(self: RequestHandler, ty, value, tb, *args, **kwargs):
+        if value is not None:
+            entry_span = get_context().active_span
+            if entry_span is not None:
+                entry_span.raised()
+
+        return old_log_exception(self, ty, value, tb, *args, **kwargs)
+
+    RequestHandler.log_exception = _sw_handler_uncaught_exception
+
+
+def _gen_sw_get_response_func(old_execute):
+    from tornado.gen import coroutine
+
+    awaitable = iscoroutinefunction(old_execute)
+    if awaitable:
+        # Starting Tornado 6 RequestHandler._execute method is a standard Python coroutine (async/await)
+        # In that case our method should be a coroutine function too
+        async def _sw_get_response(self, *args, **kwargs):
+            request = self.request
+            carrier = Carrier()
+            method = request.method
+
+            for item in carrier:
+                if item.key.capitalize() in request.headers:
+                    item.val = request.headers[item.key.capitalize()]
+
+            span = NoopSpan(NoopContext()) if config.ignore_http_method_check(method) \
+                else get_context().new_entry_span(op=request.path, carrier=carrier)
+
+            with span:
+                span.layer = Layer.Http
+                span.component = Component.Tornado
+
+                socket = request.connection.stream.socket
+                if socket:
+                    peer = socket.getpeername()
+                    span.peer = f'{peer[0]}:{peer[1]}'
+                else:
+                    peer = '<unavailable>'
+
+                span.tag(TagHttpMethod(method))
+                span.tag(TagHttpURL(f'{request.protocol}://{request.host}{request.path}'))
+                result = old_execute(self, *args, **kwargs)
+                if isawaitable(result):
+                    result = await result
+                span.tag(TagHttpStatusCode(self._status_code))
+                if self._status_code >= 400:
+                    span.error_occurred = True
+            return result
+    else:
+        @coroutine
+        def _sw_get_response(self, *args, **kwargs):
+            request = self.request
+            carrier = Carrier()
+            method = request.method
+
+            for item in carrier:
+                if item.key.capitalize() in request.headers:
+                    item.val = request.headers[item.key.capitalize()]
+
+            span = NoopSpan(NoopContext()) if config.ignore_http_method_check(method) \
+                else get_context().new_entry_span(op=request.path, carrier=carrier)
+
+            with span:
+                span.layer = Layer.Http
+                span.component = Component.Tornado
+
+                socket = request.connection.stream.socket
+                if socket:
+                    peer = socket.getpeername()
+                    span.peer = f'{peer[0]}:{peer[1]}'
+                else:
+                    peer = '<unavailable>'
+
+                span.tag(TagHttpMethod(method))
+                span.tag(TagHttpURL(f'{request.protocol}://{request.host}{request.path}'))
+                result = yield from old_execute(self, *args, **kwargs)
+                span.tag(TagHttpStatusCode(self._status_code))
+                if self._status_code >= 400:
+                    span.error_occurred = True
+            return result
+    return _sw_get_response

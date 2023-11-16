@@ -1,0 +1,5 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+ignoreRules = [ "Unused ignore", "Invalid decoration", "blacklist", "Missing argument", "hardcoded_bind_all_interfaces", "B104", "B201" ]

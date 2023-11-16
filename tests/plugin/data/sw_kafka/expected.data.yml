@@ -1,0 +1,74 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+
+segmentItems:
+  - serviceName: producer
+    segmentSize: 1
+    segments:
+      - segmentId: not null
+        spans:
+          - operationName: Kafka/stackinsights/Producer
+            parentSpanId: 0
+            spanId: 1
+            spanLayer: MQ
+            tags:
+              - key: mq.broker
+                value: 'kafka-server:9092'
+              - key: mq.topic
+                value: stackinsights
+            startTime: gt 0
+            endTime: gt 0
+            componentId: 40
+            spanType: Exit
+            peer: kafka-server:9092
+            skipAnalysis: false
+          - operationName: /users
+            operationId: 0
+            parentSpanId: -1
+            spanId: 0
+            spanLayer: Http
+            tags:
+              - key: http.method
+                value: GET
+              - key: http.url
+                value: http://0.0.0.0:9090/users
+              - key: http.status_code
+                value: '200'
+            startTime: gt 0
+            endTime: gt 0
+            componentId: 7001
+            spanType: Entry
+            peer: not null
+            skipAnalysis: false
+  - serviceName: consumer
+    segmentSize: 1
+    segments:
+      - segmentId: not null
+        spans:
+          - operationName: Kafka/stackinsights/Consumer/stackinsights
+            operationId: 0
+            parentSpanId: -1
+            spanId: 0
+            spanLayer: MQ
+            tags:
+              - key: mq.broker
+                value: 'kafka-server:9092'
+              - key: mq.topic
+                value: stackinsights
+            refs:
+              - parentEndpoint: Kafka/stackinsights/Producer
+                networkAddress: 'kafka-server:9092'
+                refType: CrossProcess
+                parentSpanId: 1
+                parentTraceSegmentId: not null
+                parentServiceInstance: not null
+                parentService: producer
+                traceId: not null
+            startTime: gt 0
+            endTime: gt 0
+            componentId: 41
+            spanType: Entry
+            peer: ''
+            skipAnalysis: false

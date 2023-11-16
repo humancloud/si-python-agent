@@ -1,0 +1,23 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+{{- contains . }}
+- id: {{ notEmpty .id }}
+  serviceid: {{ b64enc "e2e-service-provider" }}.1
+  servicename: ""
+  endpointname: /artist-provider
+  starttime: {{ gt .starttime 0 }}
+  duration: 5
+  mindurationthreshold: 0
+  dumpperiod: 10
+  maxsamplingcount: 5
+  logs:
+    {{- contains .logs }}
+    - id: {{ notEmpty .id }}
+      instanceid: {{ regexp .instanceid "ZTJlLXNlcnZpY2UtcHJvdmlkZXI.*" }}
+      operationtype: EXECUTION_FINISHED
+      instancename: ""
+      operationtime: {{ gt .operationtime 0 }}
+    {{- end }}
+{{- end }}

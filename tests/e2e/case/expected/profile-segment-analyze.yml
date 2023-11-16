@@ -1,0 +1,17 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+tip: null
+trees:
+  {{- contains .trees }}
+  - elements:
+    {{- contains .elements }}
+    - id: "{{ notEmpty .id }}"
+      parentid: "{{ notEmpty .parentid }}"
+      codesignature: "{{ notEmpty .codesignature }}"
+      duration: {{ gt .duration 0 }}
+      durationchildexcluded: {{ ge .durationchildexcluded 0 }}
+      count: {{ gt .count 0 }}
+    {{- end }}
+  {{- end }}

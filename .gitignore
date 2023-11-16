@@ -1,0 +1,20 @@
+#
+# Copyright (c) 2019 Stackinsights to present
+# All rights reserved
+#
+.idea/
+.fleet/
+*.iml
+.DS_Store
+*~
+**/*_pb2*
+**/__pycache__
+**/.pytest_cache
+build/
+dist/
+**/*.pyc
+/apache_stackinsights.egg-info/
+**/.venv/
+tests/**/requirements.txt
+.vscode/
+.github
